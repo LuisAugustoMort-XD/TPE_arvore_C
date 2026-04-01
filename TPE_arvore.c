@@ -31,6 +31,16 @@ Produto* criarProduto(int id, char nome[], float preco) {
     return p;
 }
 
+int comparar(Produto *a, Produto *b) {
+    if ( a -> preco < b -> preco) return -1;
+    if ( a -> preco > b ->preco) return 1;
+
+    if (a -> id < b->id) return -1;
+    if (a -> id > b -> id) return 1;
+
+    return 0;
+}
+
 
 NoID* inserirID(NoID *raiz, Produto *p) {
     if (raiz == NULL) {
@@ -57,7 +67,7 @@ NoPreco* inserirPreco(NoPreco *raiz, Produto *p) {
         return novo;
     }
 
-    if (p->preco < raiz->prod->preco)
+    if (comparar(p, raiz -> prod) < 0)
         raiz->esq = inserirPreco(raiz->esq, p);
     else
         raiz->dir = inserirPreco(raiz->dir, p);
@@ -108,10 +118,86 @@ void maisProximo(NoPreco *raiz, float alvo, Produto **melhor, float *dif) {
         maisProximo(raiz->dir, alvo, melhor, dif);
 }
 
+NoID* menorNoID(NoID* raiz) {
+    while (raiz -> esq != NULL)
+        raiz = raiz -> esq;
+    return raiz;
+}
+
+NoID* removerID(NoID* raiz, int id ) {
+    if (raiz == NULL) return NULL;
+
+    if (id < raiz -> prod -> id)
+        raiz -> esq = removerID(raiz -> esq, id);
+    else if (id > raiz -> prod -> id)
+        raiz -> dir = removerID(raiz->dir,id);
+    else {
+        if (raiz -> esq == NULL) {
+            NoID* temp = raiz ->dir;
+            free(raiz);
+            return(temp);
+        }
+        else if (raiz -> dir == NULL) {
+            NoID* temp = raiz -> esq;
+            free(raiz);
+            return temp;
+        }
+        NoID* temp = menorNoID(raiz -> dir);
+        raiz -> prod = temp -> prod;
+        raiz -> dir = removerID(raiz -> dir, temp -> prod ->id);
+    }
+    return raiz;
+}
+
+NoPreco* removerPreco(NoPreco* raiz, Produto *p) {
+    if (raiz == NULL) return NULL;
+
+    int cmp = comparar(p, raiz->prod);
+
+    if (cmp < 0)
+        raiz->esq = removerPreco(raiz->esq, p);
+    else if (cmp > 0)
+        raiz->dir = removerPreco(raiz->dir, p);
+    else {
+        if (raiz->esq == NULL) {
+            NoPreco* temp = raiz->dir;
+            free(raiz);
+            return temp;
+        }
+        else if (raiz->dir == NULL) {
+            NoPreco* temp = raiz->esq;
+            free(raiz);
+            return temp;
+        }
+
+        NoPreco* temp = menorNoPreco(raiz->dir);
+        raiz->prod = temp->prod;
+        raiz->dir = removerPreco(raiz->dir, temp->prod);
+    }
+
+    return raiz;
+}
+
+
 
 void inserirProduto(NoID **idRoot, NoPreco **precoRoot, Produto *p) {
     *idRoot = inserirID(*idRoot, p);
     *precoRoot = inserirPreco(*precoRoot, p);
+}
+
+void removerProduto(NoID **raizID, NoPreco **raizPreco, int id) {
+    Produto *p =  buscarID(*raizID, id);
+
+    if (p == NULL) {
+        printf("Produto nao encontrado! \n");
+        return;
+    }
+    *raizID = removerID(*raizID, id);
+    *raizPreco = removerPreco(*raizPreco, p);
+
+    free(p);
+
+    printf("Produto removido com sucesso!\n");
 }
 
 
@@ -126,6 +212,7 @@ int opcao;
         printf("2 - Buscar por ID\n");
         printf("3 - Buscar por faixa de preco\n");
         printf("4 - Buscar preco mais proximo\n");
+        printf("5 - Remover produto\n");
         printf("0 - Sair\n");
         printf(" Escolha: \n");
         scanf("%d", &opcao);
@@ -187,6 +274,14 @@ int opcao;
                 printf("Mais proximo; %s - %.2f\n", melhor->nome, melhor->preco);
             else
                 printf("Nenhum produto encontrado");
+        }
+
+        else if ( opcao == 5) {
+            int id;
+            printf("ID para remover: ");
+            scanf("%d", &id);
+
+            removerProduto(&raizID, &raizPreco, id);
         }
     } while (opcao != 0);
 
