@@ -119,8 +119,13 @@ void maisProximo(NoPreco *raiz, float alvo, Produto **melhor, float *dif) {
 }
 
 NoID* menorNoID(NoID* raiz) {
-    while (raiz -> esq != NULL)
-        raiz = raiz -> esq;
+    while (raiz != NULL && raiz -> esq != NULL)
+        raiz = raiz ->esq;
+    return raiz;
+}
+NoPreco* menorNoPreco(NoPreco* raiz) {
+    while (raiz != NULL && raiz->esq != NULL)
+        raiz = raiz->esq;
     return raiz;
 }
 
@@ -169,17 +174,13 @@ NoPreco* removerPreco(NoPreco* raiz, Produto *p) {
             free(raiz);
             return temp;
         }
+           NoPreco* temp = menorNoPreco(raiz -> dir);
+            raiz -> prod = temp -> prod;
+            raiz -> dir = removerPreco(raiz -> dir, temp->prod);
 
-        NoPreco* temp = menorNoPreco(raiz->dir);
-        raiz->prod = temp->prod;
-        raiz->dir = removerPreco(raiz->dir, temp->prod);
-    }
-
+        }
     return raiz;
-}
-
-
-
+    }
 void inserirProduto(NoID **idRoot, NoPreco **precoRoot, Produto *p) {
     *idRoot = inserirID(*idRoot, p);
     *precoRoot = inserirPreco(*precoRoot, p);
